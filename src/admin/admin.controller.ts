@@ -4,23 +4,11 @@ import {
   Get,
   Param,
   Patch,
-  UseGuards,
 } from '@nestjs/common';
-
-import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.guard';
-import { RolesGuard } from '../auth/gaurds/roles.guard';
-
-import { Roles } from '../common/decorators/roles.decorator';
-import { UserRole } from '../common/enums/role.enum';
 
 import { ArticlesService } from '../articles/articles.service';
 
 @Controller('admin')
-@UseGuards(
-  JwtAuthGuard,
-  RolesGuard,
-)
-@Roles(UserRole.ADMIN)
 export class AdminController {
   constructor(
     private readonly articlesService:

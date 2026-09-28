@@ -8,7 +8,7 @@ http://localhost:3000/api
 
 All request and response bodies are JSON unless mentioned otherwise.
 
-Authentication uses a JWT bearer token:
+Authentication is available through JWT login, but API endpoints do not require a bearer token:
 
 ```http
 Authorization: Bearer <accessToken>
@@ -211,9 +211,9 @@ Errors:
 
 ### GET `/auth/me`
 
-Returns the authenticated user.
+Returns `null`; this endpoint no longer requires authentication.
 
-Auth: Required
+Auth: Public
 
 Response `200`:
 
@@ -228,12 +228,6 @@ Response `200`:
   "isActive": true
 }
 ```
-
-Errors:
-
-| Status | Reason |
-| --- | --- |
-| `401` | Missing, invalid, or expired token |
 
 ## Article APIs
 
@@ -329,7 +323,7 @@ Errors:
 
 Creates a new article. New articles are created with `PENDING` status and must be approved by an admin before appearing in public article APIs.
 
-Auth: Required
+Auth: Public
 
 Request body:
 
@@ -337,7 +331,8 @@ Request body:
 {
   "title": "Article title",
   "body": "Article body",
-  "image": "https://example.com/image.jpg"
+  "image": "https://example.com/image.jpg",
+  "userId": "64f..."
 }
 ```
 
@@ -348,6 +343,7 @@ Fields:
 | `title` | string | Yes | Must not be empty |
 | `body` | string | Yes | Must not be empty |
 | `image` | string | No | Optional string URL/path |
+| `userId` | MongoDB ObjectId | Yes | Article owner |
 
 Response `201`:
 
@@ -371,13 +367,13 @@ Errors:
 | Status | Reason |
 | --- | --- |
 | `400` | Validation failed |
-| `401` | Missing, invalid, or expired token |
-
 ### GET `/articles/my-articles`
 
-Returns all articles created by the authenticated user, including `PENDING`, `APPROVED`, and `REJECTED`.
+Returns all articles created by the specified user, including `PENDING`, `APPROVED`, and `REJECTED`.
 
-Auth: Required
+Auth: Public
+
+Query parameter: `userId` (MongoDB ObjectId, required)
 
 Response `200`:
 
@@ -402,8 +398,6 @@ Errors:
 
 | Status | Reason |
 | --- | --- |
-| `401` | Missing, invalid, or expired token |
-
 ## Comment APIs
 
 ### GET `/articles/:articleId/comments`
@@ -443,13 +437,14 @@ Response `200`:
 
 Creates a comment for an article and increments the article `commentsCount`.
 
-Auth: Required
+Auth: Public
 
 Request body:
 
 ```json
 {
-  "content": "Nice article"
+  "content": "Nice article",
+  "userId": "64f..."
 }
 ```
 
@@ -458,6 +453,7 @@ Fields:
 | Field | Type | Required | Rules |
 | --- | --- | --- | --- |
 | `content` | string | Yes | Must not be empty, max 2000 characters |
+| `userId` | MongoDB ObjectId | Yes | Comment author |
 
 Response `201`:
 
@@ -483,13 +479,13 @@ Errors:
 | Status | Reason |
 | --- | --- |
 | `400` | Validation failed |
-| `401` | Missing, invalid, or expired token |
-
 ### DELETE `/comments/:id`
 
-Soft-deletes the authenticated user's own comment and decrements the article `commentsCount`.
+Soft-deletes the specified user's own comment and decrements the article `commentsCount`.
 
-Auth: Required
+Auth: Public
+
+Query parameter: `userId` (MongoDB ObjectId, required)
 
 Path parameters:
 
@@ -509,16 +505,17 @@ Errors:
 
 | Status | Reason |
 | --- | --- |
-| `401` | Missing, invalid, or expired token |
-| `404` | Comment not found, already deleted, or not owned by the user |
+| `404` | Comment not found, already deleted, or not owned by the specified user |
 
 ## Like APIs
 
 ### POST `/articles/:articleId/like`
 
-Likes an article as the authenticated user and increments `likesCount`.
+Likes an article as the specified user and increments `likesCount`.
 
-Auth: Required
+Auth: Public
+
+Query parameter: `userId` (MongoDB ObjectId, required)
 
 Path parameters:
 
@@ -539,14 +536,15 @@ Errors:
 
 | Status | Reason |
 | --- | --- |
-| `401` | Missing, invalid, or expired token |
-| `409` | Article already liked by this user |
+| `409` | Article already liked by the specified user |
 
 ### DELETE `/articles/:articleId/like`
 
-Removes the authenticated user's like from an article and decrements `likesCount`.
+Removes the specified user's like from an article and decrements `likesCount`.
 
-Auth: Required
+Auth: Public
+
+Query parameter: `userId` (MongoDB ObjectId, required)
 
 Path parameters:
 
@@ -567,18 +565,17 @@ Errors:
 
 | Status | Reason |
 | --- | --- |
-| `401` | Missing, invalid, or expired token |
 | `404` | Like not found |
 
 ## Admin APIs
 
-All admin APIs require a valid JWT for a user with `role: "ADMIN"`.
+Admin APIs are public and no longer require a JWT or admin role.
 
 ### GET `/admin/articles/pending`
 
 Returns pending articles for moderation, oldest first.
 
-Auth: Admin required
+Auth: Public
 
 Response `200`:
 
@@ -605,18 +602,11 @@ Response `200`:
 ]
 ```
 
-Errors:
-
-| Status | Reason |
-| --- | --- |
-| `401` | Missing, invalid, or expired token |
-| `403` | Authenticated user is not an admin |
-
 ### PATCH `/admin/articles/:id/approve`
 
 Approves an article. Approved articles become visible in public article APIs.
 
-Auth: Admin required
+Auth: Public
 
 Path parameters:
 
@@ -643,15 +633,13 @@ Errors:
 
 | Status | Reason |
 | --- | --- |
-| `401` | Missing, invalid, or expired token |
-| `403` | Authenticated user is not an admin |
 | `404` | Article not found |
 
 ### PATCH `/admin/articles/:id/reject`
 
 Rejects an article and stores the rejection reason.
 
-Auth: Admin required
+Auth: Public
 
 Request body:
 
@@ -680,7 +668,5 @@ Errors:
 
 | Status | Reason |
 | --- | --- |
-| `401` | Missing, invalid, or expired token |
-| `403` | Authenticated user is not an admin |
 | `404` | Article not found |
 

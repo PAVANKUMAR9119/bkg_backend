@@ -9,4 +9,8 @@ export class CreateCommentDto {
   @IsNotEmpty()
   @MaxLength(2000)
   content: string | undefined;
+
+  @IsString()
+  @IsNotEmpty()
+  userId: string | undefined;
 }

@@ -13,6 +13,10 @@ export class CreateArticleDto {
   @IsNotEmpty()
   body: string | undefined;
 
+  @IsString()
+  @IsNotEmpty()
+  userId: string | undefined;
+
   @IsOptional()
   @IsString()
   image?: string;

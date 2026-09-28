@@ -5,15 +5,11 @@ import {
   Param,
   Post,
   Query,
-  Req,
-  UseGuards,
 } from '@nestjs/common';
 
 import { ArticlesService } from './articles.service';
 
 import { CreateArticleDto } from './dto/create-article.dto';
-
-import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.guard';
 
 @Controller('articles')
 export class ArticlesController {
@@ -34,10 +30,9 @@ export class ArticlesController {
   }
 
   @Get('my-articles')
-  @UseGuards(JwtAuthGuard)
-  findMyArticles(@Req() req: any) {
+  findMyArticles(@Query('userId') userId: string) {
     return this.articlesService.findMyArticles(
-      req.user._id.toString(),
+      userId,
     );
   }
 
@@ -47,14 +42,12 @@ export class ArticlesController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
   create(
     @Body() dto: CreateArticleDto,
-    @Req() req: any,
   ) {
     return this.articlesService.create(
       dto,
-      req.user._id.toString(),
+      dto.userId!,
     );
   }
 }

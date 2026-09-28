@@ -3,15 +3,12 @@ import {
   Delete,
   Param,
   Post,
-  Req,
-  UseGuards,
+  Query,
 } from '@nestjs/common';
 
-import { JwtAuthGuard } from '../auth/gaurds/jwt-auth.guard';
 import { LikesService } from './likes.service';
 
 @Controller('articles/:articleId/like')
-@UseGuards(JwtAuthGuard)
 export class LikesController {
   constructor(
     private readonly likesService:
@@ -21,22 +18,22 @@ export class LikesController {
   @Post()
   like(
     @Param('articleId') articleId: string,
-    @Req() req: any,
+    @Query('userId') userId: string,
   ) {
     return this.likesService.like(
       articleId,
-      req.user._id.toString(),
+      userId,
     );
   }
 
   @Delete()
   unlike(
     @Param('articleId') articleId: string,
-    @Req() req: any,
+    @Query('userId') userId: string,
   ) {
     return this.likesService.unlike(
       articleId,
-      req.user._id.toString(),
+      userId,
     );
   }
 }
