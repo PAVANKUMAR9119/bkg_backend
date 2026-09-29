@@ -44,6 +44,12 @@ export class Article {
   })
   status: ArticleStatus | undefined;
 
+  @Prop({
+    type: Boolean,
+    default: false,
+  })
+  featured: boolean | undefined;
+
   @Prop({ type: String })
   rejectionReason?: string;
 

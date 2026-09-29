@@ -1,6 +1,7 @@
 import {
   IsNotEmpty,
   IsOptional,
+  IsBoolean,
   IsString,
 } from 'class-validator';
 
@@ -20,4 +21,8 @@ export class CreateArticleDto {
   @IsOptional()
   @IsString()
   image?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  featured?: boolean;
 }

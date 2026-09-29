@@ -70,6 +70,87 @@ export class ArticlesService {
     };
   }
 
+  async findByStatus(
+    status: ArticleStatus,
+    page = 1,
+    limit = 10,
+  ) {
+    const skip = (page - 1) * limit;
+
+    const [articles, total] = await Promise.all([
+      this.articleModel
+        .find({ status })
+        .populate(
+          'author',
+          'name type profileImage',
+        )
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.articleModel.countDocuments({ status }),
+    ]);
+
+    return {
+      articles,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async findFiltered(
+    filters: {
+      status?: ArticleStatus;
+      userId?: string;
+      featured?: boolean;
+    },
+    page = 1,
+    limit = 10,
+  ) {
+    const skip = (page - 1) * limit;
+    const query: Record<string, unknown> = {};
+
+    if (filters.status) {
+      query.status = filters.status;
+    }
+    if (filters.userId) {
+      query.author = new Types.ObjectId(filters.userId);
+    }
+    if (filters.featured !== undefined) {
+      query.featured = filters.featured
+        ? true
+        : { $in: [false, null] };
+    }
+
+    const [articles, total] = await Promise.all([
+      this.articleModel
+        .find(query)
+        .populate(
+          'author',
+          'name type profileImage',
+        )
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.articleModel.countDocuments(query),
+    ]);
+
+    return {
+      articles,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   async findOne(id: string) {
     const article = await this.articleModel
       .findOne({
